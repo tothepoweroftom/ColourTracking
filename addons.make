@@ -1,3 +1,4 @@
 ofxCv
+ofxGui
 ofxLearn
 ofxOpenCv

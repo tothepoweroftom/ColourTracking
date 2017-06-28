@@ -3,6 +3,8 @@
 #include "ofMain.h"
 #include "ofxOpenCv.h"
 #include "ofxCv.h"
+#include "ofxGui.h"
+
 
 
 class ofApp : public ofBaseApp{
@@ -26,7 +28,8 @@ public:
     int hue, sat, val;
     bool drawEnabled;
     
-    ofVideoGrabber		wCam;
+//    ofVideoGrabber		wCam;
+    ofVideoPlayer       myPlayer;
     ofxCvColorImage		origOutput;
     ofxCvColorImage		origOutputHSV;
     
@@ -45,6 +48,19 @@ public:
     ofMesh predicted, line, estimated;
     ofVec2f point;
     float speed;
+    
+    
+    //GUI ----------------------------
+    ofxPanel gui;
+
+    ofxIntSlider lowHue;
+    ofxIntSlider highHue;
+    ofxIntSlider lowSat;
+    ofxIntSlider highSat;
+    
+    ofxFloatSlider rapidness;
+    ofxFloatSlider smoothness;
+    
     
     
 //    unsigned char *		scribblePixels;

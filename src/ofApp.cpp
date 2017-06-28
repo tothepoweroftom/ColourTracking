@@ -7,17 +7,32 @@ void ofApp::setup(){
     
     ofSetVerticalSync(true);
     
-    kalman.init(1/100000., 1/10.); // inverse of (smoothness, rapidness)
+    ///GUI SETUP
+    
+    gui.setup();
+    
+    gui.add(lowHue.setup("lowHue", 32, 0, 360));
+    gui.add(highHue.setup("highHue", 82, 0, 360));
+    gui.add(lowSat.setup("lowSat", 100, 0, 360));
+    gui.add(highSat.setup("highSat", 20, 0, 360));
+    gui.add(rapidness.setup("Rapidness", 0.1, 0.000001, 1.0));
+    gui.add(smoothness.setup("smoothness", 0.1, 0.000001, 1.0));
+
+
+    kalman.init(1/10000., 1/100.); // inverse of (smoothness, rapidness)
     
     line.setMode(OF_PRIMITIVE_LINE_STRIP);
     predicted.setMode(OF_PRIMITIVE_LINE_STRIP);
     estimated.setMode(OF_PRIMITIVE_LINE_STRIP);
     
     speed = 0.f;
+    myPlayer.load("/Users/tom.power/Documents/of_v0.9.8_osx_release/addons/ofxCv/ColourTracking/src/foosballsim.mov");
     
-    wWidth  = 320;
-    wHeight = 240;
     
+    wWidth  = myPlayer.getWidth();
+    wHeight = myPlayer.getHeight();
+    ofLog(OF_LOG_NOTICE, "Size w: " + ofToString(wWidth) + " h: " + ofToString(wHeight));
+
     hue = 0;
     sat = 0;
     val = 0;
@@ -26,8 +41,10 @@ void ofApp::setup(){
     
     
     //Video Grabber from webcam
-    wCam.initGrabber(wWidth, wHeight);
-    
+//    wCam.initGrabber(wWidth, wHeight);
+
+
+    myPlayer.play();
     
     //Allocate memory for outputs
     origOutput.allocate(wWidth, wHeight);
@@ -43,6 +60,8 @@ void ofApp::setup(){
     lockedOnTexture.allocate(wWidth, wHeight, GL_LUMINANCE);
     lockedOutput.allocate(wWidth, wHeight);
     
+
+
 }
 
 //--------------------------------------------------------------
@@ -51,13 +70,10 @@ void ofApp::update(){
     
 
     
-    wCam.update();
-    if (wCam.isFrameNew()) {
-//        origOutput.setFromPixels(wCam.getPixels(), 320, 240);
-                string info = "fps: " + ofToString(ofGetFrameRate(),2);
-        ofDrawBitmapString(info, 10, ofGetHeight()-40);
+    myPlayer.update(); // get all the new frames
+    if (myPlayer.isFrameNew()) {
         
-        origOutput.setFromPixels(wCam.getPixels());
+        origOutput.setFromPixels(myPlayer.getPixels());
         origOutputHSV = origOutput;
         origOutputHSV.convertRgbToHsv();
         
@@ -73,8 +89,8 @@ void ofApp::update(){
         
         //This is a flat array of the pixel values that we iterate through. Set to white the pixels that are there.
         for (int i = 0; i < (wWidth * wHeight); i++) {
-            if ((huePixels[i] >= 9  && huePixels[i] <= 22) &&
-                (satPixels[i] >= 130)) {
+            if ((huePixels[i] >= lowHue  && huePixels[i] <= highHue) &&
+                (satPixels[i] >= lowSat)) {
                 lockedOnPixels[i] = 255;
             } else {
                 lockedOnPixels[i] = 0;
@@ -103,7 +119,7 @@ void ofApp::update(){
             int alpha = ofMap(speed, 0, 20, 50, 255, true);
             line.addColor(ofColor(255, 255, 255, alpha));
             predicted.addColor(ofColor(255, 0, 0, alpha));
-            estimated.addColor(ofColor(0, 255, 0, alpha));
+            estimated.addColor(ofColor(0, 255, 255, alpha));
         }
         
         
@@ -113,14 +129,13 @@ void ofApp::update(){
 //--------------------------------------------------------------
 void ofApp::draw(){
     ofBackground(100, 100, 100);
+//    ofSetColor(0xffffff);
     
-    ofSetColor(0xffffff);
-    
-    wCam.draw(0,0);
+    myPlayer.draw(0,0);
 //    origOutputHSV.draw(360, 0);
     lockedContours.draw();
     
-    lockedOnTexture.draw(720, 0);
+    lockedOnTexture.draw(200, 380);
     
     
     char tmpStr[255];
@@ -131,12 +146,13 @@ void ofApp::draw(){
     
     predicted.draw();
     ofPushStyle();
-    ofSetColor(ofColor::red, 128);
+//    ofSetColor(ofColor::red, 128);
     ofFill();
     ofDrawCircle(point, speed * 2);
     ofPopStyle();
     
     estimated.draw();
+    gui.draw();
 
 }
 
